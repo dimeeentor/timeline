@@ -13,47 +13,21 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 7) {
-                        TimelineCellView()
-                        TimelineCellView()
-                        TimelineCellView()
-                        TimelineCellView()
-                        TimelineCellView()
-                        TimelineCellView()
-                        TimelineCellView()
+                List(0 ..< 7) { _ in
+                    NavigationLink(destination: { Text("asd") }) {
+                        Text(Int.random(in: 1...100), format: .number)
                     }
-                    .padding(24)
+                    .listRowBackground(Color.brown.opacity(0.1))
                 }
+                .scrollContentBackground(.hidden)
+                .listRowSpacing(20)
+                .background(.brown.opacity(0.2))
             }
             .navigationTitle("Timeline")
             .scrollIndicators(.never)
             .sheet(isPresented: $isSheetPresenting) {
                 // TODO: Implement logic
-                Spacer()
-                Button(action: {
-                    isSheetPresenting = false
-                }) {
-                    Text("Done")
-                        .padding()
-                        .foregroundStyle(.pink)
-                        .frame(maxWidth: .infinity)
-                        .background(.white.secondary)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 18)
-                                .stroke(style: .init(lineWidth: 1, dash: [10])
-                                )
-                                .foregroundStyle(.pink)
-                        }
-                        .clipShape(.rect(cornerRadius: 18))
-                        .padding(EdgeInsets(top: 0, leading: 30, bottom: 0, trailing: 30))
-                }
-                .presentationDetents([.medium])
-                .presentationBackground(alignment: .center) {
-                    RoundedRectangle(cornerRadius: 36)
-                        .foregroundStyle(.white)
-                        .padding()
-                }
+                SheetView(isSheetPresenting: $isSheetPresenting)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -63,6 +37,7 @@ struct ContentView: View {
                     }
                 }
             }
+            .toolbarBackground(.brown.opacity(0.2), for: .navigationBar)
         }
     }
 }
@@ -72,38 +47,89 @@ struct ContentView: View {
 }
 
 // TODO: Separate into simpler view
+enum CellHeight: CGFloat, Hashable, CaseIterable {
+    case Big = 200
+    case Medium = 140
+    case Small = 100
+}
+
 struct TimelineCellView: View {
-    let cellHeight: CGFloat = 200
+    @State private var cellHeight: CellHeight = .Big
 
     var body: some View {
         VStack(alignment: .leading) {
             // Decoration
-            Rectangle()
-                .foregroundStyle(.gray.quinary)
-                .frame(width: cellHeight + 20, height: 5)
-                .rotation3DEffect(
-                    .degrees(90),
-                    axis: (x: 0.0, y: 0.0, z: 1.0),
-                    anchor: .topLeading
-                )
+//            Rectangle()
+//                .foregroundStyle(.gray.quinary)
+//                .frame(width: cellHeight.rawValue + 20, height: 5)
+//                .rotation3DEffect(
+//                    .degrees(90),
+//                    axis: (x: 0.0, y: 0.0, z: 1.0),
+//                    anchor: .topLeading
+//                )
 
             HStack(spacing: 1) {
                 // Decoration
-                Rectangle()
-                    .foregroundStyle(.gray.quinary)
-                    .frame(width: 20, height: 5)
+//                Rectangle()
+//                    .foregroundStyle(.gray.quinary)
+//                    .frame(width: 20, height: 5)
 
                 // Cell
                 RoundedRectangle(cornerRadius: 18.0)
-                    .foregroundStyle(.regularMaterial)
-                    .frame(width: .infinity, height: cellHeight)
-                    .shadow(radius: 2)
+                    .foregroundStyle(.white)
+                    .frame(width: .infinity, height: cellHeight.rawValue)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18.0)
+                            .stroke(lineWidth: 0.5)
+                            .foregroundStyle(.black.secondary)
+                    }
                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 18.0))
                     .contextMenu(ContextMenu(menuItems: {
                         Text("Edit...")
                         Text("Delete")
+                        Picker("Change size", selection: $cellHeight) {
+                            ForEach(CellHeight.allCases, id: \.self) { size in
+                                Text("\(size)")
+                            }
+                        }
+                        .pickerStyle(.menu)
                     }))
             }
         }
+        .animation(.default, value: cellHeight)
+    }
+}
+
+struct SheetView: View {
+    @Binding var isSheetPresenting: Bool
+    @State private var text = ""
+
+    var body: some View {
+        // TODO: TextField to add new event
+        VStack(spacing: 5) {
+            TextEditor(text: $text)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .scrollContentBackground(.hidden)
+                .background(.gray.quinary.opacity(0.85))
+                .clipShape(.rect(cornerRadius: 9))
+
+            Spacer()
+
+            Button(action: {
+                isSheetPresenting = false
+            }) {
+                Text("Done")
+                    .padding()
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .background(.pink)
+                    .clipShape(.rect(cornerRadius: 18))
+            }
+            .presentationDetents([.medium, .large])
+            .presentationCornerRadius(18)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 24)
     }
 }
